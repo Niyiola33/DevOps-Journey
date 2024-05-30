@@ -1,402 +1,285 @@
-# MERN Web Stack-102
+# 
 
-## Step 1 - Backend Configuration
+## Install Node.Js
 
-### Update Ubuntu
-Update Ubuntu with the following commands:
-```bash
+1. Update ubuntu
+~~~
 sudo apt update
+~~~
+2. Upgrade ubuntu
+~~~
 sudo apt upgrade
-```
-
-### Install Node.js
-
-Get the location of Node.js software from Ubuntu repositories:
 ~~~
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+3. Add certificates
 ~~~
+sudo apt -y install curl dirmngr apt-transport-https lsb-release ca-certificates
 
-Install Node.js on the server:
+curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
 ~~~
-sudo apt-get install -y nodejs
+4. Install NodeJS
+~~~
+sudo apt install -y nodejs
 ~~~
 
-Note: The command above installs both Node.js and npm. NPM is a package manager for Node.js, similar to apt for Ubuntu, and it is used to install Node modules & packages and to manage dependency conflicts.
-
-Verify the installation:
-~~~
-node -v
-npm -v
-~~~
-
-Application Code Setup
-Create a new directory for your To-Do project:
+## Install MongoDB
 
 ~~~
-mkdir Todo
-cd Todo
+sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 0C49F3730359A14518585931BC711F9BA15703C6
 ~~~
-Initialize your project:
+~~~
+echo "deb [ arch=amd64 ] https://repo.mongodb.org/apt/ubuntu trusty/mongodb-org/3.4 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-3.4.list
+~~~
+1. Install MongoDB
 
+~~~
+sudo apt install -y mongodb
+~~~
+2. Start The server
+~~~
+sudo service mongodb start
+~~~
+3. Verify that the service is up and running
+~~~
+sudo systemctl status mongodb
+~~~
+4. Install [npm](https://www.npmjs.com) - Node package manager.
+~~~
+sudo apt install -y npm
+~~~
+5. Install 'body-parser package
+
+> We need 'body-parser' package to help us process JSON files passed in requests to the server.
+~~~
+sudo npm install body-parser
+~~~
+6. Create a folder named 'Books'
+~~~
+mkdir Books && cd Books
+~~~
+7. In the Books directory, Initialize npm project
 ~~~
 npm init
 ~~~
-Follow the prompts to create a package.json file.
+8. Add a file to it named server.js
 ~~~
-Install Express.js
-Install Express.js 
+vi server.js
 ~~~
-using npm:
+9. Copy and paste the web server code below into the server.js file.
 ~~~
-npm install express
-~~~
-
-Create a file index.js:
-
-~~~
-touch index.js
-~~~
-Install the dotenv module:
-~~~
-npm install dotenv
-~~~
-
-Open index.js and add the following code:
-
-~~~
-const express = require('express');
-require('dotenv').config();
-
-const app = express();
-const port = process.env.PORT || 5000;
-
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  next();
-});
-
-app.use((req, res, next) => {
-  res.send('Welcome to Express');
-});
-
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`)
-});
-~~~
-
-Start your server:
-~~~
-node index.js
-~~~
-
-If everything is set up correctly, you should see Server running on port 5000 in your terminal.
-
-
-Open Port 5000 in EC2 Security Groups
-Refer to the setup in Project 1 Step 1 – Installing the Nginx Web Server. Create an inbound rule to open TCP port 5000.
-
-Open your browser and access your server's Public IP or Public DNS name followed by port 5000:
-
-http://<PublicIP-or-PublicDNS>:5000
-![alt text](<A web page.png>)
-Routes
-> There are three actions that our To-Do application needs to handle:
-
-> Create a new task
-Display a list of all tasks
-Delete a completed task
-Each task will be associated with a specific endpoint and will use different standard HTTP request methods: POST, GET, DELETE.
-
-Create a routes folder:
-
-~~~
-mkdir routes
-cd routes
-~~~
-
-Create a file api.js:
-
-~~~
-touch api.js
-vim api.js
-~~~
-
-Open api.js and add the following code:
-~~~
-const express = require('express');
-const router = express.Router();
-
-router.get('/todos', (req, res, next) => {});
-
-router.post('/todos', (req, res, next) => {});
-
-router.delete('/todos/:id', (req, res, next) => {});
-
-module.exports = router;
-~~~
-#### Models
-To create a schema and a model, install mongoose:
-
-~~~
-cd ..
-npm install mongoose
-mkdir models
-cd models
-touch todo.js
-vim todo.js
-~~~
-Open todo.js and add the following code:
-
-~~~
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
-
-// create schema for todo
-const TodoSchema = new Schema({
-  action: {
-    type: String,
-    required: [true, 'The todo text field is required']
-  }
-});
-
-// create model for todo
-const Todo = mongoose.model('todo', TodoSchema);
-
-module.exports = Todo;
-~~~
-##### Update Routes
-Update api.js to use the new model:
-~~~
-cd ../routes
-vim api.js
-~~~
-Delete the existing content and add the following code:
-~~~
-:%d
-~~~
-~~~
-const express = require('express');
-const router = express.Router();
-const Todo = require('../models/todo');
-
-router.get('/todos', (req, res, next) => {
-  Todo.find({}, 'action')
-    .then(data => res.json(data))
-    .catch(next);
-});
-
-router.post('/todos', (req, res, next) => {
-  if (req.body.action) {
-    Todo.create(req.body)
-      .then(data => res.json(data))
-      .catch(next);
-  } else {
-    res.json({
-      error: "The input field is empty"
-    });
-  }
-});
-
-router.delete('/todos/:id', (req, res, next) => {
-  Todo.findOneAndDelete({ "_id": req.params.id })
-    .then(data => res.json(data))
-    .catch(next);
-});
-module.exports = router;
-~~~
-
-##### MongoDB Database
-1. Sign up at MongoDB Atlas
-
-2. Select AWS as the cloud provider, 
-3. create a MongoDB database and collection.
-
-Create a file .env in your Todo directory:
-~~~
-touch .env
-vim .env
-~~~
-Add the connection string to access the database:
-![alt text](<A mongo DB.png>)
-~~~
-DB='mongodb+srv://<username>:<password>@<network-address>/<dbname>?retryWrites=true&w=majority'
-~~~
-4. Ensure to update <username>, <password>, <network-address>, and <dbname> according to your setup.
-![alt text](<A mongo db connection (2).png>)
-##### Update index.js
-Update index.js to use .env for the database connection:
-![alt text](MogoDB-Network-Access-1-768x334.png)
-![alt text](Mongo-create-DB-1-768x379.png)
-![alt text](Mongo-create-DB-2-768x334.png)
-~~~
-vim index.js
-~~~
-Delete the existing content and add the following code:
-~~~
-:%d
-~~~
-~~~
-const express = require('express');
-const bodyParser = require('body-parser');
-const mongoose = require('mongoose');
-const routes = require('./routes/api');
-const path = require('path');
-require('dotenv').config();
-
-const app = express();
-const port = process.env.PORT || 5000;
-
-// connect to the database
-mongoose.connect(process.env.DB, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('Database connected successfully'))
-  .catch(err => console.log(err));
-
-// since mongoose promise is deprecated, we override it with Node's promise
-mongoose.Promise = global.Promise;
-
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  next();
-});
-
+var express = require('express');
+var bodyParser = require('body-parser');
+var app = express();
+app.use(express.static(__dirname + '/public'));
 app.use(bodyParser.json());
-app.use('/api', routes);
-
-app.use((err, req, res, next) => {
-  console.log(err);
-  next();
-});
-
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+require('./apps/routes')(app);
+app.set('port', 3300);
+app.listen(app.get('port'), function() {
+    console.log('Server up: http://localhost:' + app.get('port'));
 });
 ~~~
-5. Start your server:
+## Install Express and set up routes to the server
+
+1. We will use express mongoose
 
 ~~~
-node index.js
+sudo npm install express mongoose
 ~~~
-
-##### Testing Backend Code without Frontend using RESTful API
-1. Use Postman to test your API.
-
-2. Create a POST request to the API:
-
-![alt text](post-request-768x389.jpeg)
-3. Copy code http://<PublicIP-or-PublicDNS>:5000/api/todos
-4. Ensure the header key Content-Type is set to application/json.
-![alt text](postman_header.png)
-5. Create a GET request to your API:
-6. Copy code
-http://<PublicIP-or-PublicDNS>:5000/api/todos
-![alt text](<A connection 5000.png>)
-## Step 2 - Frontend Creation
-##### Scaffold Your App
-In the same root directory as your backend code 
+2. In the 'Books' folder, create a folder named apps
 ~~~
- cd Todo
-npx create-react-app client
+mkdir apps && cd apps
 ~~~
-
-Install Dependencies
-Install concurrently and nodemon:
-
+3. Create a file named routes.js
 ~~~
-npm install concurrently --save-dev
-npm install nodemon --save-dev
+vi routes.js
 ~~~
-
-##### Update package.json
-1. In the Todo directory, update package.json:
+4. Copy and paste the code below into routes.js
 ~~~
-vim package.json
+var Book = require('./models/book');
+module.exports = function(app) {
+  app.get('/book', function(req, res) {
+    Book.find({}, function(err, result) {
+      if ( err ) throw err;
+      res.json(result);
+    });
+  }); 
+  app.post('/book', function(req, res) {
+    var book = new Book( {
+      name:req.body.name,
+      isbn:req.body.isbn,
+      author:req.body.author,
+      pages:req.body.pages
+    });
+    book.save(function(err, result) {
+      if ( err ) throw err;
+      res.json( {
+        message:"Successfully added book",
+        book:result
+      });
+    });
+  });
+  app.delete("/book/:isbn", function(req, res) {
+    Book.findOneAndRemove(req.query, function(err, result) {
+      if ( err ) throw err;
+      res.json( {
+        message: "Successfully deleted the book",
+        book: result
+      });
+    });
+  });
+  var path = require('path');
+  app.get('*', function(req, res) {
+    res.sendfile(path.join(__dirname + '/public', 'index.html'));
+  });
+};
 ~~~
+5. In the 'apps' folder, create a folder named models
 ~~~
-"scripts": {
-  "start": "node index.js",
-  "start-watch": "nodemon index.js",
-  "dev": "concurrently \"npm run start-watch\" \"cd client && npm start\""
-}
+mkdir models && cd models
 ~~~
-3. Configure Proxy
-Change directory to client:
-
+6. Create a file named book.js
 ~~~
-cd client
+vi book.js
 ~~~
-
-4. Update package.json to include the proxy configuration:
-
->"proxy": "http://localhost:5000"
-![alt text](<A connection 5000.png>)
-5. Start the Application
-Ensure you are inside the Todo directory, and run:
+7. Copy and paste the code below into 'book.js'
 ~~~
-npm run dev
+var mongoose = require('mongoose');
+var dbHost = 'mongodb://localhost:27017/test';
+mongoose.connect(dbHost);
+mongoose.connection;
+mongoose.set('debug', true);
+var bookSchema = mongoose.Schema( {
+  name: String,
+  isbn: {type: String, index: true},
+  author: String,
+  pages: Number
+});
+var Book = mongoose.model('Book', bookSchema);
+module.exports = mongoose.model('Book', bookSchema);
 ~~~
-Your app should open and start running on localhost:3000.
-
-##### Creating React Components
-Navigate to the client directory:
-~~~
-cd client/src
-~~~
-
-5. Create a components folder:
-~~~
-mkdir components
-cd components
-~~~
-6. Create Input.js, ListTodo.js, and Todo.js:
-
-~~~
-touch Input.js ListTodo.js Todo.js
-~~~
-7. Input Component
-Open Input.js and add the following code:
-~~~
-import React, { Component } from 'react';
-import axios from 'axios';
-
-class Input extends Component {
-  state = {
-    action: ""
-  }
-
-  addTodo = () => {
-    const task = { action: this.state.action }
-    if (task.action && task.action.length > 0) {
-      axios.post('/api/todos', task)
-        .then(res => {
-          if (res.data) {
-            this.props.getTodos();
-            this.setState({ action: "" });
-          }
-        })
-        .catch(err => console.log(err));
-    } else {
-      console.log('input field required');
-    }
-  }
-
-  handleChange = (e) => {
-    this.setState({ action: e.target.value });
-  }
-~~~
-
-8. Go to the Todo directory
+##  Access the routes with AngularJS
+1. Change the directory back to 'Books'
 ~~~
 cd ../..
 ~~~
-When you are in the Todo directory run:
+2. Create a folder named public
 ~~~
-npm run dev
+mkdir public && cd public
 ~~~
-![alt text](<A last connection.png>)
+3. Add a file named script.js
+~~~
+vi script.js
+~~~
+4. Copy and paste the Code below (controller configuration defined) into the script.js file.
+~~~
+var app = angular.module('myApp', []);
+app.controller('myCtrl', function($scope, $http) {
+  $http( {
+    method: 'GET',
+    url: '/book'
+  }).then(function successCallback(response) {
+    $scope.books = response.data;
+  }, function errorCallback(response) {
+    console.log('Error: ' + response);
+  });
+  $scope.del_book = function(book) {
+    $http( {
+      method: 'DELETE',
+      url: '/book/:isbn',
+      params: {'isbn': book.isbn}
+    }).then(function successCallback(response) {
+      console.log(response);
+    }, function errorCallback(response) {
+      console.log('Error: ' + response);
+    });
+  };
+  $scope.add_book = function() {
+    var body = '{ "name": "' + $scope.Name + 
+    '", "isbn": "' + $scope.Isbn +
+    '", "author": "' + $scope.Author + 
+    '", "pages": "' + $scope.Pages + '" }';
+    $http({
+      method: 'POST',
+      url: '/book',
+      data: body
+    }).then(function successCallback(response) {
+      console.log(response);
+    }, function errorCallback(response) {
+      console.log('Error: ' + response);
+    });
+  };
+});
+~~~
+5. In 'public' folder, create a file named index.html
+~~~
+vi index.html
+~~~
+6. Cpoy and paste the code below into index.html file.
+~~~
+<!doctype html>
+<html ng-app="myApp" ng-controller="myCtrl">
+  <head>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+    <script src="script.js"></script>
+  </head>
+  <body>
+    <div>
+      <table>
+        <tr>
+          <td>Name:</td>
+          <td><input type="text" ng-model="Name"></td>
+        </tr>
+        <tr>
+          <td>Isbn:</td>
+          <td><input type="text" ng-model="Isbn"></td>
+        </tr>
+        <tr>
+          <td>Author:</td>
+          <td><input type="text" ng-model="Author"></td>
+        </tr>
+        <tr>
+          <td>Pages:</td>
+          <td><input type="number" ng-model="Pages"></td>
+        </tr>
+      </table>
+      <button ng-click="add_book()">Add</button>
+    </div>
+    <hr>
+    <div>
+      <table>
+        <tr>
+          <th>Name</th>
+          <th>Isbn</th>
+          <th>Author</th>
+          <th>Pages</th>
 
-open "http://localhost:3000" in the browser
-Assuming no errors when saving all these files, our To-Do app should be ready and fully functional with the functionality.
+        </tr>
+        <tr ng-repeat="book in books">
+          <td>{{book.name}}</td>
+          <td>{{book.isbn}}</td>
+          <td>{{book.author}}</td>
+          <td>{{book.pages}}</td>
 
-![alt text](<A 3000.png>)
+          <td><input type="button" value="Delete" data-ng-click="del_book(book)"></td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>
+~~~
+7. Change the directory back up to 'Books'
+~~~
+cd ..
+~~~
+8. Start the server by running this command:
+~~~
+node server.js
+~~~
+![alt text](<Screenshot 2024-05-30 151749.png>)
+9. The server is now up and running, we can connect it via port 3300. You can launch a separate Putty or SSH console to test what curl command returns locally.
+~~~
+curl -s http://localhost:3300
+~~~
+![alt text](<open port 3300.png>)
+10. Add port 3300 under port 80 in the security group in AWS as done in the previous project.
+11. run {http://16.16.241.119:3300/}
+![alt text](<Screenshot 2024-05-30 170144.png>)

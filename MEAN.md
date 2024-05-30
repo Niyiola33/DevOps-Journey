@@ -1,4 +1,4 @@
-# 
+# MEAN Stack Deployment to Ubuntu in AWS
 
 ## Install Node.Js
 

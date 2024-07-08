@@ -276,9 +276,7 @@ By now, you should know how to install and configure a MySQL DBMS to work with a
 
 3. Create a database user and name it `webaccess`:
     ```sh
-    CREATE USER 'webaccess
-
-'@'%' IDENTIFIED BY 'password';
+    CREATE USER 'webaccess'@'%' IDENTIFIED BY 'password';
     ```
 
 4. Grant permission to the `webaccess` user on the `tooling` database to perform any action only from the web servers' subnet CIDR:

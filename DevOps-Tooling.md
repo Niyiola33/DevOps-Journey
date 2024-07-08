@@ -23,7 +23,7 @@ In this project, you will implement a solution that consists of the following co
    - Create 3 EBS volumes of 10 GiB each in the same Availability Zone as your EC2 instance.
    - Attach all three volumes to your EC2 instance.
 
-   ![Volumes](WORDPRESS/Volumes.png)
+   ![Tooling/Tooling.Secu.png](Tooling/Tooling.Secu.png)
 
 ### Configure the Server
 
@@ -41,7 +41,7 @@ In this project, you will implement a solution that consists of the following co
    lsblk
    ```
 
-   ![lsblk](WORDPRESS/lsblk.png)
+    ![alt text](<Tooling/Screenshot 2024-06-16 152717.png>)
 
 3. **Create Partitions:**
    Use the `gdisk` utility to create a single partition on each of the 3 disks:
@@ -70,16 +70,15 @@ In this project, you will implement a solution that consists of the following co
    sudo pvcreate /dev/nvme2n1p1
    sudo pvcreate /dev/nvme3n1p1
    ```
-
+    ![alt text](<Tooling/Screenshot 2024-07-02 104219.png>)
 6. **Create a Volume Group:**
    Create a volume group named `webdata-vg`:
 
    ```bash
    sudo vgcreate webdata-vg /dev/xvdf1 /dev/xvdg1 /dev/xvdh1
    ```
-
-   ![Volume Group](WORDPRESS/Screenshot 2024-06-09 204320.png)
-
+    ![alt text](<Tooling/Screenshot 2024-06-19 143614.png>)
+   
 7. **Create Logical Volumes:**
    Create three logical volumes: `lv-apps`, `lv-logs`, and `lv-opt`:
 
@@ -89,8 +88,8 @@ In this project, you will implement a solution that consists of the following co
    sudo lvcreate -n lv-opt -L 2G webdata-vg
    ```
 
-   WORDPRESS/Screenshot 2024-06-09 204801.png
-![alt text](<Tooling/Screenshot 2024-06-19 143614.png>)
+   ![alt text](<Tooling/Screenshot 2024-06-19 143831.png>)
+
 8. **Format Logical Volumes:**
    Format the logical volumes with the xfs filesystem:
 
@@ -99,8 +98,7 @@ In this project, you will implement a solution that consists of the following co
    sudo mkfs -t xfs /dev/webdata-vg/lv-logs
    sudo mkfs -t xfs /dev/webdata-vg/lv-opt
    ```
-
-   ![alt text](<WORDPRESS/Screenshot 2024-06-09 204801.png>)
+    ![alt text](<Tooling/Screenshot 2024-06-20 142144.png>)
 
 9. **Create Directories:**
    Create directories for the website and logs:
@@ -122,9 +120,11 @@ In this project, you will implement a solution that consists of the following co
     sudo rsync -av /home/recovery/logs/ /mnt/logs
     ```
 
-    ![alt text](<WORDPRESS/Screenshot 2024-06-09 205001.png>)
+    ![alt text](<Tooling/Screenshot 2024-06-19 143614.png>)
 
-11. **Update /etc/fstab:**
+    ![alt text](<Tooling/Screenshot 2024-06-20 142144.png>)
+    
+    11. **Update /etc/fstab:**
     Update the `/etc/fstab` file to ensure the mount configuration persists after a reboot:
 
     ```bash
@@ -134,8 +134,7 @@ In this project, you will implement a solution that consists of the following co
 
     Add the entries for the logical volumes using their UUIDs.
 
-    ![alt text](<WORDPRESS/Screenshot 2024-06-09 205734.png>)
-
+    
 12. **Reload Daemon and Verify Setup:**
     Test the configuration and reload the daemon:
 
@@ -150,13 +149,9 @@ In this project, you will implement a solution that consists of the following co
     df -h
     ```
 
-    ![alt text](<WORDPRESS/Screenshot 2024-06-09 203409.png>)
+   
 
 ### NFS Server Setup and Configuration Guide
-
-```markdown
-# NFS Server Setup and Configuration Guide
-
 This guide provides step-by-step instructions for setting up an NFS server and configuring it for web server clients.
 
 ## Step 1: Update the System
@@ -260,9 +255,6 @@ These ports should be opened in your security group settings.
 ![alt text](Tooling/Tooling.Secu.png)
 
 By following these steps, you will have a fully functional NFS server that your web server clients can connect to.
-```
-
-## Comprehensive Guide for Configuring a MySQL Database Server and Preparing Web Servers
 
 ## Step 2 — Configure the Database Server
 
@@ -335,7 +327,7 @@ sudo yum install nfs-utils nfs4-acl-tools -y
     ```plaintext
     <NFS-Server-Private-IP-Address>:/mnt/apps /var/www nfs defaults 0 0
     ```
-
+![alt text](Tooling/Tooling.etc.png)
 ### Install Remi's Repository, Apache, and PHP
 
 ```sh
@@ -363,6 +355,11 @@ Locate the log folder for Apache on the Web Server and mount it to NFS server's 
 ### Fork and Deploy Tooling Source Code
 
 1. Fork the tooling source code from StegHub Github Account to your Github account.
+ ```
+    sudo git init
+    git clone <your-fork-url>
+
+```
 2. Deploy the tooling website's code to the Webserver. Ensure that the `html` folder from the repository is deployed to `/var/www/html`.
 
 **Note 1**: Do not forget to open TCP port 80 on the Web Server.
@@ -385,7 +382,7 @@ Set `SELINUX=disabled`, then restart `httpd`.
     ```sh
     mysql -h <database-private-ip> -u <db-username> -p <db-password> < tooling-db.sql
     ```
-![alt text](<Tooling/Screenshot 2024-07-04 194027.png>)
+
 ### Create a New Admin User in MySQL
 
 Create a new admin user in MySQL with username: `myuser` and password: `password`:
@@ -402,4 +399,4 @@ http://<Web-Server-Public-IP-Address-or-Public-DNS-Name>/index.php
 ```
 
 Make sure you can log in to the website with the `myuser` user.
-![alt text](<Tooling/Screenshot 2024-07-04 194027.png>)
+![alt text](<Tooling/Screenshot 2024-07-04 134907.png>) ![alt text](<Tooling/Screenshot 2024-07-03 223928.png>)

@@ -15,9 +15,13 @@ Make sure that you have the following servers installed and configured within th
 
 1. **Create an Ubuntu Server 20.04 EC2 instance and name it `Project-8-apache-lb`**:
    - Your EC2 list will look like this:
-![alt text](<Screenshot 2024-07-24 134826.png>)   
+
+![alt text](LB-instance.png)   
+
 2. **Open TCP port 80** on `Project-8-apache-lb` by creating an Inbound Rule in the Security Group.
-![alt text](<Screenshot 2024-07-24 124837.png>)
+
+![alt text](Security-group.png)
+
 3. **Install Apache Load Balancer on `Project-8-apache-lb` server and configure it to point traffic coming to LB to both Web Servers**:
 
    ```sh
@@ -43,7 +47,7 @@ Make sure that you have the following servers installed and configured within th
    ```sh
    sudo systemctl status apache2
    ```
-    ![alt text](<Screenshot 2024-07-24 135039.png>)
+    ![alt text](Apache-status.png)
 5. **Configure load balancing**:
 
    ```sh
@@ -64,7 +68,7 @@ Make sure that you have the following servers installed and configured within th
    ProxyPass / balancer://mycluster/
    ProxyPassReverse / balancer://mycluster/
    ```
-![alt text](<Screenshot 2024-07-21 172904.png>)
+![alt text](Config-file.png)
 6. **Restart apache server**:
 
    ```sh
@@ -83,7 +87,7 @@ Make sure that you have the following servers installed and configured within th
      ```
      http://<Load-Balancer-Public-IP-Address-or-Public-DNS-Name>/index.php
      ```
-![alt text](<Screenshot 2024-07-24 122947.png>)
+![alt text](Lb-IP.png)
 2. **Note**: If in the previous project, you mounted `/var/log/httpd/` from your Web Servers to the NFS server - unmount them and make sure that each Web Server has its own log directory.
 
 3. **Open two ssh/Putty consoles for both Web Servers and run the following command**:
@@ -97,11 +101,12 @@ Make sure that you have the following servers installed and configured within th
    ```
    http://<Load-Balancer-Public-IP-Address-or-Public-DNS-Name>/index.php
    ```
-![alt text](<Screenshot 2024-07-24 122947.png>)
+![alt text](Lb-IP.png)
    - Ensure that both servers receive HTTP GET requests from your LB. New records must appear in each server's log file.
    - The number of requests to each server will be approximately the same since the `loadfactor` is set to the same value for both servers, meaning traffic will be distributed evenly.
-![alt text](<Screenshot 2024-07-24 122111.png>)
-![alt text](<Screenshot 2024-07-24 122111.png>)
+
+![alt text](Log-file.png)
+![alt text](Log-file.png)
 ### Conclusion
 
 If you have configured everything correctly, your users will not even notice that their requests are served by more than one server.
@@ -128,22 +133,22 @@ Sometimes it is tedious to remember and switch between IP addresses, especially 
    <WebServer1-Private-IP-Address> Web1
    <WebServer2-Private-IP-Address> Web2
    ```
-![alt text](<Screenshot 2024-07-24 135230.png>)
+![alt text](Web-config.png)
 3. **Update your LB config file with those names instead of IP addresses**:
 
    ```apache
    BalancerMember http://Web1:80 loadfactor=5 timeout=1
    BalancerMember http://Web2:80 loadfactor=5 timeout=1
    ```
-![alt text](<Screenshot 2024-07-24 135111.png>)
+![alt text](etc-config.png)
 4. **You can try to curl your Web Servers from LB locally**:
 
    ```sh
    curl http://Web1
    curl http://Web2
    ```
-![](<Screenshot 2024-07-24 134416.png>)
-  ![alt text](<Screenshot 2024-07-24 134416.png>)
+![alt text](Web-curl.png)
+  
    It should work.
 
 ### Note:

@@ -1,6 +1,9 @@
 # MEAN Stack Deployment to Ubuntu in AWS
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> b4a0810fb973e144a3afe16d5636a73e7a44f8b1
 
 ## Install Node.Js
 

@@ -2,7 +2,6 @@
 
 ## Introduction to Jenkins- 102
 
-Welcome to the tutorial on Tooling Website deployment automation with Continuous Integration using Jenkins. This guide will help you set up Jenkins for continuous integration, retrieve source code from GitHub using webhooks, and deploy files to an NFS server via SSH.
 
 ## Step 1 - Install Jenkins Server
 
@@ -41,12 +40,14 @@ sudo systemctl status jenkins
 ```
 
 By default, Jenkins uses TCP port 8080. Open this port by creating a new inbound rule in your EC2 Security Group.
+
 ![alt text](<Security Group Jenkins.png>)
 ### 1.5. Perform Initial Jenkins Setup
 1. Access Jenkins in your browser:
     ```
     http://<Jenkins-Server-Public-IP-Address-or-Public-DNS-Name>:8080
     ```
+    
 ![alt text](<Unlock Jenkins.png>)
 2. Retrieve the default admin password:
     ```bash
@@ -54,32 +55,41 @@ By default, Jenkins uses TCP port 8080. Open this port by creating a new inbound
     ```
 
 3. Install suggested plugins and create an admin user.
+   
 ![alt text](<Customize Jenkins.png>)
 ![alt text](<Screenshot 2024-08-04 150525.png>)
+
 ## Step 2 - Configure Jenkins to Retrieve Source Code from GitHub Using Webhooks
 
 ### 2.1. Enable Webhooks in GitHub
 1. Go to your GitHub repository settings and enable webhooks.
+   
 ![alt text](<Screenshot 2024-08-05 153939.png>)
 ### 2.2. Create a Jenkins Job
 1. In Jenkins, click **"New Item"** and create a **"Freestyle project"**.
+   
 ![alt text](<Screenshot 2024-08-04 152409.png>)
-2. Configure Git repository:
+3. Configure Git repository:
     - Provide the URL of your GitHub repository.
     - Add credentials if required.
+
 ![alt text](<Screenshot 2024-08-04 155910.png>)
-3. Save the configuration and manually trigger the build by clicking **"Build Now"**.
+4. Save the configuration and manually trigger the build by clicking **"Build Now"**.
+
 ![alt text](<Screenshot 2024-08-04 210445.png>)
-4. Check the build status under **"Build History"** and view **"Console Output"** for success.
+5. Check the build status under **"Build History"** and view **"Console Output"** for success.
+
 ![alt text](<Screenshot 2024-08-04 203550.png>)
 ### 2.3. Automate Builds
 1. Configure the job to trigger from GitHub webhook:
     - Go to **"Configure"** and add a **"Build Trigger"** for GitHub webhook.
 
 2. Configure **"Post-build Actions"** to archive build artifacts.
+
 ![alt text](<Screenshot 2024-08-04 155942.png>)
 ### 2.4. Test Automation
 1. Make a change to any file in your GitHub repository (e.g., `README.md`) and push the changes.
+
 ![alt text](<Screenshot 2024-08-04 210445.png>)
 2. Verify that a new build is triggered automatically and artifacts are saved on the Jenkins server.
 ```
@@ -98,8 +108,10 @@ ls /var/lib/jenkins/jobs/tooling_github/builds/<build_number>/archive/
 2. Scroll to the **"Publish over SSH"** section and configure:
     - Provide the path to your private key file (`.pem`).
     - Enter arbitrary name, hostname (NFS server private IP), username (`ec2-user`), and remote directory (`/mnt/apps`).
+
 ![alt text](<Screenshot 2024-08-04 223202.png>)
 3. Test the SSH configuration to ensure it returns success. Ensure TCP port 22 on the NFS server is open.
+
 ![alt text](<Screenshot 2024-08-04 223202.png>)
 ### 3.3. Configure Job for SSH Transfer
 1. Open the Jenkins job configuration page and add a **"Post-build Action"** for SSH transfer.
@@ -115,6 +127,7 @@ ls /var/lib/jenkins/jobs/tooling_github/builds/<build_number>/archive/
     ```bash
     cat /mnt/apps/README.md
     ```
+
 ![alt text](<Screenshot 2024-08-04 231433.png>)
 If you see the changes made in your GitHub repository, the job is working as expected!
 

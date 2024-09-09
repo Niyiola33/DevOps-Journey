@@ -1,130 +1,154 @@
-# Load Balancer Solution With Apache-102
+# Load Balancer Solution With Nginx and SSL/TLS-102
 
-## DevOps/Cloud Engineering Load Balancer Solution With Apache-102
+## DevOps/Cloud Engineering Load Balancer Solution With Nginx and SSL/TLS-102
 
 ### Status: Complete
 
 ---
 
-## Prerequisites
+## Part 1 - Configure Nginx As A Load Balancer
 
-Make sure that you have the following servers installed and configured within the previous project:
+You can either uninstall Apache from the existing Load Balancer server or create a fresh installation of Linux for Nginx.
 
-- Two RHEL8 Web Servers
-- One MySQL DB Server (based on Ubuntu 20.04)
-- One RHEL8 NFS Server
+1. Create an EC2 VM based on Ubuntu Server 20.04 LTS and name it `Nginx LB`. (Do not forget to open TCP port 80 for HTTP connections and TCP port 443 for secured HTTPS connections.)
 
----
+2. Update the `/etc/hosts` file for local DNS with Web Servers' names (e.g., Web1 and Web2) and their local IP addresses.
 
-## Configure Apache As A Load Balancer
-
-1. Create an Ubuntu Server 20.04 EC2 instance and name it `Project-8-apache-lb`, so your EC2 list will look like this:
-
-2. Open TCP port 80 on `Project-8-apache-lb` by creating an Inbound Rule in Security Group.
-
-3. Install Apache Load Balancer on `Project-8-apache-lb` server and configure it to point traffic coming to LB to both Web Servers:
+3. Install and configure Nginx as a load balancer to point traffic to the resolvable DNS names of the web servers.
 
     ```bash
-    # Install apache2
+    # Update the instance and install Nginx
     sudo apt update
-    sudo apt install apache2 -y
-    sudo apt-get install libxml2-dev
-
-    # Enable following modules:
-    sudo a2enmod rewrite
-    sudo a2enmod proxy
-    sudo a2enmod proxy_balancer
-    sudo a2enmod proxy_http
-    sudo a2enmod headers
-    sudo a2enmod lbmethod_bytraffic
-
-    # Restart apache2 service
-    sudo systemctl restart apache2
+    sudo apt install nginx
     ```
 
-4. Make sure apache2 is up and running:
+4. Configure Nginx LB using the Web Servers' names defined in `/etc/hosts`.
+
+    **Hint:** Read this blog to learn more about `/etc/hosts`.
+
+5. Open the default Nginx configuration file:
 
     ```bash
-    sudo systemctl status apache2
+    sudo vi /etc/nginx/nginx.conf
     ```
 
-5. Configure load balancing:
+6. Insert the following configuration into the `http` section:
+
+    ```nginx
+    upstream myproject {
+        server Web1 weight=5;
+        server Web2 weight=5;
+    }
+
+    server {
+        listen 80;
+        server_name www.domain.com;
+        location / {
+            proxy_pass http://myproject;
+        }
+    }
+    ```
+
+7. Comment out this line:
+
+    ```nginx
+    # include /etc/nginx/sites-enabled/*;
+    ```
+
+8. Restart Nginx and make sure the service is up and running:
 
     ```bash
-    sudo vi /etc/apache2/sites-available/000-default.conf
+    sudo systemctl restart nginx
+    sudo systemctl status nginx
     ```
+# Part 2 - Register a New Domain Name and Configure Secured Connection Using SSL/TLS Certificates
 
-    Add this configuration into the `<VirtualHost *:80> </VirtualHost>` section:
+Let's make the necessary configurations to secure connections to our Tooling Web Solution!
 
-    ```apache
-    <Proxy "balancer://mycluster">
-        BalancerMember http://<WebServer1-Private-IP-Address>:80 loadfactor=5 timeout=1
-        BalancerMember http://<WebServer2-Private-IP-Address>:80 loadfactor=5 timeout=1
-        ProxySet lbmethod=bytraffic
-        # ProxySet lbmethod=byrequests
-    </Proxy>
+## Step 1: Register a New Domain Name
 
-    ProxyPreserveHost On
-    ProxyPass / balancer://mycluster/
-    ProxyPassReverse / balancer://mycluster/
-    ```
+To obtain a valid SSL certificate, you need to register a new domain name. You can do this through any domain name registrar. Some of the most popular ones are:
 
-6. Restart Apache server:
+- [GoDaddy.com](https://www.godaddy.com)
+- [Domain.com](https://www.domain.com)
+- [Bluehost.com](https://www.bluehost.com)
+
+### Instructions:
+1. Register a new domain name with any registrar of your choice in any domain zone (e.g., .com, .net, .org, .edu, .info, .xyz, or any other).
+2. Assign an Elastic IP to your Nginx LB server and associate your domain name with this Elastic IP.
+
+    - Every time you restart or stop/start your EC2 instance, you receive a new public IP address. To avoid this, associate your domain name with a static IP address that does not change after a reboot. Elastic IP solves this problem. Learn how to allocate an Elastic IP and associate it with an EC2 server on [this page](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-ip-addresses-eip.html).
+
+3. Update the A record in your domain registrar to point to Nginx LB using the Elastic IP address.
+
+    - Learn how to associate your domain name with your Elastic IP on [this page](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-to-elastic-ip-address.html).
+
+### Side Self-Study:
+Read about different DNS record types and learn what they are used for.
+
+4. Verify that your web servers can be reached from your browser using the new domain name via the HTTP protocol: `http://<your-domain-name.com>`.
+
+## Step 2: Configure Nginx to Recognize Your New Domain Name
+
+1. Update your `nginx.conf` file:
 
     ```bash
-    sudo systemctl restart apache2
+    sudo vi /etc/nginx/nginx.conf
     ```
 
-    The `bytraffic` balancing method will distribute incoming load between your Web Servers according to current traffic load. We can control in which proportion the traffic must be distributed by the `loadfactor` parameter.
+2. Modify the `server_name` directive to use your new domain name:
 
-    You can also study and try other methods, like: `bybusyness`, `byrequests`, `heartbeat`.
-
-7. Verify that your configuration works by trying to access your LB's public IP address or Public DNS name from your browser:
-
-    ```http
-    http://<Load-Balancer-Public-IP-Address-or-Public-DNS-Name>/index.php
+    ```nginx
+    server_name www.<your-domain-name.com>;
     ```
 
-    **Note:** If in the previous project, you mounted `/var/log/httpd/` from your Web Servers to the NFS server - unmount them and make sure that each Web Server has its own log directory.
+## Step 3: Install Certbot and Request an SSL/TLS Certificate
 
-8. Open two SSH/Putty consoles for both Web Servers and run the following command:
+1. Ensure the `snapd` service is active and running:
 
     ```bash
-    sudo tail -f /var/log/httpd/access_log
+    sudo systemctl status snapd
     ```
 
-9. Try to refresh your browser page `http://<Load-Balancer-Public-IP-Address-or-Public-DNS-Name>/index.php` several times and make sure that both servers receive HTTP GET requests from your LB. New records must appear in each server's log file. The number of requests to each server will be approximately the same since we set `loadfactor` to the same value for both servers - it means that traffic will be distributed evenly between them.
-
-    If you have configured everything correctly - your users will not even notice that their requests are served by more than one server.
-## Optional Step - Configure Local DNS Names Resolution
-
-Sometimes it is tedious to remember and switch between IP addresses, especially if you have a lot of servers under your management. We can configure local domain name resolution to make things easier. The simplest way is to use the `/etc/hosts` file. Although this approach is not very scalable, it is easy to configure and illustrates the concept well. Let's configure IP address to domain name mapping for our Load Balancer (LB).
-
-1. Open the `/etc/hosts` file on your LB server:
+2. Install Certbot:
 
     ```bash
-    sudo vi /etc/hosts
+    sudo snap install --classic certbot
     ```
 
-2. Add 2 records into this file with the Local IP address and an arbitrary name for both of your Web Servers:
-
-    ```plaintext
-    <WebServer1-Private-IP-Address> Web1
-    <WebServer2-Private-IP-Address> Web2
-    ```
-
-3. Update your LB config file with those names instead of IP addresses:
-
-    ```apache
-    BalancerMember http://Web1:80 loadfactor=5 timeout=1
-    BalancerMember http://Web2:80 loadfactor=5 timeout=1
-    ```
-
-4. You can try to curl your Web Servers from the LB locally:
+3. Request your SSL/TLS certificate:
 
     ```bash
-    curl http://Web1
-    curl http://Web2
+    sudo ln -s /snap/bin/certbot /usr/bin/certbot
+    sudo certbot --nginx
     ```
 
-    It should work as expected.
+    - Follow the Certbot instructions. You will need to choose the domain for which you want the certificate issued. The domain name will be looked up from the `nginx.conf` file, so ensure it was updated in the previous step.
+
+4. Test secured access to your web solution by trying to reach `https://<your-domain-name.com>`.
+
+    - You should be able to access your website using the HTTPS protocol (which uses TCP port 443) and see a padlock icon in your browser's address bar. Click on the padlock icon to view the details of the certificate issued for your website.
+
+## Step 4: Set Up Periodical Renewal of Your SSL/TLS Certificate
+
+By default, a Let's Encrypt certificate is valid for 90 days, so it is recommended to renew it at least every 60 days or more frequently.
+
+1. Test the renewal command in dry-run mode:
+
+    ```bash
+    sudo certbot renew --dry-run
+    ```
+
+2. Set up a cron job to run the renewal command twice a day. Edit the crontab file:
+
+    ```bash
+    crontab -e
+    ```
+
+3. Add the following line to the crontab file:
+
+    ```bash
+    * */12 * * * root /usr/bin/certbot renew > /dev/null 2>&1
+    ```
+
+    - You can adjust the interval of this cron job if twice a day is too often by modifying the schedule expression.

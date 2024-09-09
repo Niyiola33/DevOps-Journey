@@ -80,6 +80,9 @@ To obtain a valid SSL certificate, you need to register a new domain name. You c
     - Every time you restart or stop/start your EC2 instance, you receive a new public IP address. To avoid this, associate your domain name with a static IP address that does not change after a reboot. Elastic IP solves this problem. Learn how to allocate an Elastic IP and associate it with an EC2 server on [this page](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-ip-addresses-eip.html).
 
 3. Update the A record in your domain registrar to point to Nginx LB using the Elastic IP address.
+![alt text](<Screenshot 2024-08-25 161317.png>)
+
+![alt text](<Screenshot 2024-08-25 173922.png>)
 
     - Learn how to associate your domain name with your Elastic IP on [this page](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-to-elastic-ip-address.html).
 
@@ -101,7 +104,7 @@ Read about different DNS record types and learn what they are used for.
     ```nginx
     server_name www.<your-domain-name.com>;
     ```
-
+![alt text](<Screenshot 2024-08-25 173731.png>)
 ## Step 3: Install Certbot and Request an SSL/TLS Certificate
 
 1. Ensure the `snapd` service is active and running:

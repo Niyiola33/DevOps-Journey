@@ -3,7 +3,7 @@ Ansible Configuration Management (Automate Project 7 to 10)
 ### Step 1 - Install and Configure Ansible on EC2 Instance
 
 1. Update the Name tag on your Jenkins EC2 Instance to `Jenkins-Ansible`. This server will be used to run playbooks.
-
+![alt text](Ansible-1-servers.png)
 2. In your GitHub account, create a new repository and name it `ansible-config-mgt`.
 
 3. Install Ansible using the following commands:
@@ -16,15 +16,15 @@ Ansible Configuration Management (Automate Project 7 to 10)
     ```bash
     ansible --version
     ```
-
+![alt text](Ansible-1-install.png)
 5. Configure a Jenkins build job to archive your repository content every time you change it.
 
 6. Create a new Freestyle project `ansible` in Jenkins and point it to your `ansible-config-mgt` repository.
 
 7. Configure a webhook in GitHub to trigger the `ansible` build.
-
+![alt text](Ansible-1-build.png)
 8. Configure a post-build job to save all files (**), as done in Project 9.
-
+![alt text](Ansible-1-post.png)
 9. Test the setup by making changes to the `README.md` file in the master branch, ensuring that the build starts automatically and Jenkins saves the files (build artifacts) in the following folder:
     ```bash
     ls /var/lib/jenkins/jobs/ansible/builds/<build_number>/archive/
@@ -156,7 +156,7 @@ An Ansible inventory file defines the hosts and groups of hosts upon which comma
 ### Step 7 - Run the First Ansible Test
 
 1. Set up VSCode to connect to your instance.
-
+![alt text](Anisible-1-file-structure.png)
 2. Navigate to your `ansible-config-mgt` directory and run your playbook:
     ```bash
     cd ansible-config-mgt
@@ -167,9 +167,12 @@ An Ansible inventory file defines the hosts and groups of hosts upon which comma
     ```bash
     ansible-playbook -i inventory/dev.yml playbooks/common.yml -v
     ```
+![alt text](ansible-1-playbook.png)
 
+![alt text](Anisible-1-file-structure.png)
 4. Confirm that Wireshark has been installed by running the following on each server:
     ```bash
     which wireshark
     wireshark --version
     ```
+![alt text](Ansible-1-Wireshack.png)
